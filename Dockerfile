@@ -21,6 +21,7 @@ ENV \
 
 RUN \
     apk add --no-cache --update tzdata curl ca-certificates && \
+    mkdir -p /usr/local/sbin && ln -s /usr/sbin/addgroup /usr/local/sbin/ && \
     adduser -s /bin/sh -D -u $APP_UID $APP_USER && chown -R $APP_USER:$APP_USER /home/$APP_USER && \
     rm -rf /var/cache/apk/*
 
