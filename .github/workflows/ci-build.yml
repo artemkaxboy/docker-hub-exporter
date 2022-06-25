@@ -52,8 +52,8 @@ jobs:
               --build-arg REVISION=${GITHUB_SHA} --build-arg VERSION=${version} \
               --build-arg REF_NAME=${GITHUB_REF} --build-arg CREATED="${now}" \
               --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8 \
-              --tag ghcr.io/${GH_REGISTRY_USERNAME}/${IMAGE_NAME}:latest \
-              --tag ${DOCKER_REGISTRY_USERNAME}/${IMAGE_NAME}:latest \
+              --tag ghcr.io/${GH_REGISTRY_USERNAME}/${IMAGE_NAME}:snapshot \
+              --tag ${DOCKER_REGISTRY_USERNAME}/${IMAGE_NAME}:snapshot \
               .
 
       - name: deploy tagged (latest) to ghcr.io and dockerhub
@@ -79,5 +79,7 @@ jobs:
               --build-arg REF_NAME=${GITHUB_REF} --build-arg CREATED="${now}" \
               --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8 \
               -t ghcr.io/${GH_REGISTRY_USERNAME}/${IMAGE_NAME}:${version} \
+              -t ghcr.io/${GH_REGISTRY_USERNAME}/${IMAGE_NAME}:latest \
               -t ${DOCKER_REGISTRY_USERNAME}/${IMAGE_NAME}:${version} \
+              -t ${DOCKER_REGISTRY_USERNAME}/${IMAGE_NAME}:latest \
               .
