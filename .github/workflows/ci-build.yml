@@ -3,15 +3,7 @@ name: build-app
 on:
   push:
     branches:
-      - main
-    tags:
-      - v*
-    paths:
-      - ".github/workflows/ci-build.yml"
-      - "app/**"
-      - "Dockerfile"
-
-  pull_request:
+      - legacy
     paths:
       - ".github/workflows/ci-build.yml"
       - "app/**"
@@ -32,7 +24,7 @@ jobs:
         run: echo ${{ steps.buildx.outputs.platforms }}
 
       - name: build and deploy main image to ghcr.io and dockerhub
-        if: ${{ github.ref == 'refs/heads/main' }}
+        if: ${{ github.ref == 'refs/heads/legacy' }}
         env:
           DOCKER_REGISTRY_USERNAME: ${{ github.actor }}
           DOCKER_REGISTRY_TOKEN: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
@@ -53,34 +45,6 @@ jobs:
               --build-arg REVISION=${GITHUB_SHA} --build-arg VERSION=${version} \
               --build-arg REF_NAME=${GITHUB_REF} --build-arg CREATED="${now}" \
               --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8 \
-              --tag ghcr.io/${GH_REGISTRY_USERNAME}/${IMAGE_NAME}:snapshot \
-              --tag ${DOCKER_REGISTRY_USERNAME}/${IMAGE_NAME}:snapshot \
-              .
-
-      - name: deploy tagged (latest) to ghcr.io and dockerhub
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        env:
-          DOCKER_REGISTRY_USERNAME: ${{ github.actor }}
-          DOCKER_REGISTRY_TOKEN: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
-          GH_REGISTRY_USERNAME: ${{ github.actor }}
-          GH_REGISTRY_TOKEN: ${{ secrets.GH_REGISTRY_TOKEN }}
-          GITHUB_SHA: ${{ github.sha }}
-          GITHUB_REF: ${{ github.ref }}
-        run: |
-          version=${GITHUB_REF#refs/tags/v}
-          now=$(date --rfc-3339=seconds --utc)
-          IMAGE_NAME="$(echo ${GITHUB_REPOSITORY} | cut -d'/' -f2)"
-          echo "REVISION=${GITHUB_SHA}, VERSION=${version}, REF_NAME=${GITHUB_REF}, CREATED=${now}"
-
-          echo ${GH_REGISTRY_TOKEN} | docker login ghcr.io -u ${GH_REGISTRY_USERNAME} --password-stdin
-          echo ${DOCKER_REGISTRY_TOKEN} | docker login -u ${DOCKER_REGISTRY_USERNAME} --password-stdin
-
-          docker buildx build --push \
-              --build-arg REVISION=${GITHUB_SHA} --build-arg VERSION=${version} \
-              --build-arg REF_NAME=${GITHUB_REF} --build-arg CREATED="${now}" \
-              --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8 \
-              -t ghcr.io/${GH_REGISTRY_USERNAME}/${IMAGE_NAME}:${version} \
-              -t ghcr.io/${GH_REGISTRY_USERNAME}/${IMAGE_NAME}:latest \
-              -t ${DOCKER_REGISTRY_USERNAME}/${IMAGE_NAME}:${version} \
-              -t ${DOCKER_REGISTRY_USERNAME}/${IMAGE_NAME}:latest \
+              --tag ghcr.io/${GH_REGISTRY_USERNAME}/${IMAGE_NAME}:legacy \
+              --tag ${DOCKER_REGISTRY_USERNAME}/${IMAGE_NAME}:legacy \
               .
