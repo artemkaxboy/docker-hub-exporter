@@ -20,10 +20,46 @@ Below is a list of the available flags. You can also find this list by using the
 
 ## Install and deploy
 
-Run manually from Docker Hub:
+### Run with `docker run` command
 
+Using environment variables:
+
+```shell
+docker run -d --restart=always -p 9170:9170 \
+  --env IMAGES="infinityworks/docker-hub-exporter,infinityworks/build-tools" \
+  --env NAMESPACES="artemkaxboy,nginx" \
+  artemkaxboy/docker-hub-exporter
 ```
-docker run -d --restart=always -p 9170:9170 artemkaxboy/docker-hub-exporter --image="infinityworks/docker-hub-exporter" --namespace="artemkaxboy"
+
+Using flags:
+
+```shell
+docker run -d --restart=always -p 9170:9170 \
+  artemkaxboy/docker-hub-exporter \
+  --image="infinityworks/docker-hub-exporter" --image="infinityworks/build-tools" \
+  --namespace="artemkaxboy" --namespace="nginx"
+```
+
+### Run with `docker compose`
+
+Create `compose.yml`/`docker-compose.yml`:
+
+```yml
+services:
+  docker-hub-exporter:
+    image: artemkaxboy/docker-hub-exporter
+    environment:
+      IMAGES: "infinityworks/docker-hub-exporter,infinityworks/build-tools"
+      NAMESPACES: "artemkaxboy,nginx"
+    ports:
+      - "9170:9170"
+    restart: unless-stopped
+```
+
+Run with docker compose v2:
+
+```shell
+docker compose up -d
 ```
 
 ## Known Issues
