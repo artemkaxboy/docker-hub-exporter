@@ -7,7 +7,6 @@ package cmd
 import (
 	exporter "docker-hub-exporter/exporter"
 	log "github.com/go-pkgz/lgr"
-	"github.com/jessevdk/go-flags"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
@@ -18,47 +17,23 @@ import (
 
 // ServerCommand set of flags and command for server to start
 type ServerCommand struct {
-	MetricsPath string `long:"telemetry-path" required:"false" default:"/metrics" description:"Metrics path"`
-	Namespaces  string `long:"organisations" env:"ORGS" required:"false" description:"Namespaces to expose metrics for"`
-	Images      string `long:"images" env:"IMAGES" required:"false" description:"(list) Images to expose metrics for" env-delim:","`
-	Timeout     int    `long:"connection-timeout" env:"CONNECTION_TIMEOUT" required:"false" default:"5" description:"Docker Hub connection timeout in seconds"`
+	MetricsPath string `long:"telemetry-path" required:"false" default:"/metrics" description:"Path under which to expose metrics. (default \"/metrics\")"`
+	Namespaces  string `long:"organisations" env:"ORGS" required:"false" description:"Organisations/Users you wish to monitor: expected format 'org1,org2'"`
+	Images      string `long:"images" env:"IMAGES" required:"false" description:"Images you wish to monitor: expected format 'user/image1,user/image2'"`
+	Timeout     int    `long:"connection-timeout" required:"false" default:"5" description:"Connection timeout in seconds.  (default 5)"`
 
-	Port    string `long:"listen-address" env:"BIND_PORT" required:"false" default:":9170" description:"Listen address and port"`
-	Retries int    `long:"connection-retries" env:"CONNECTION_TIMEOUT" required:"false" default:"3" description:"Connection retries until failure is raised"`
-}
-
-type LegacyOptions struct {
-	Organisations string `long:"organisations" required:"false"`
-	Images        string `long:"images" required:"false"`
+	Port    string `long:"listen-address" env:"BIND_PORT" required:"false" default:":9170" description:"Address on which to expose metrics and web interface. (default \":9170\")"`
+	Retries int    `long:"connection-retries" required:"false" default:"3" description:"Connection retries until failure is raised.  (default 3)"`
 }
 
 // Execute starts server with ServerCommand parameters, entry point for "server" command
-func (sc *ServerCommand) Execute(unparsedArgs []string) error {
+func (sc *ServerCommand) Execute(_ []string) error {
 
-	log.Printf("[INFO] start `server`")
+	log.Printf("[INFO] start `server` on port %s", sc.Port)
 	log.Printf("[DEBUG] options: %+v", sc)
 
-	newNamespaces := noEmptySplit(removeSpaces(sc.Namespaces), ',')
-	newImages := noEmptySplit(removeSpaces(sc.Images), ',')
-
-	dashedArgs := make([]string, len(unparsedArgs))
-	for i, attr := range unparsedArgs {
-		if strings.HasPrefix(attr, "-") {
-			dashedArgs[i] = "-" + attr
-		} else {
-			dashedArgs[i] = attr
-		}
-	}
-
-	var legacy LegacyOptions
-	p := flags.NewParser(&legacy, flags.None)
-	_, err := p.ParseArgs(append([]string{""}, dashedArgs...))
-	if err != nil {
-		return err
-	}
-
-	namespaces := append(newNamespaces, noEmptySplit(removeSpaces(legacy.Organisations), ',')...)
-	images := append(newImages, noEmptySplit(removeSpaces(legacy.Images), ',')...)
+	namespaces := noEmptySplit(removeSpaces(sc.Namespaces), ',')
+	images := noEmptySplit(removeSpaces(sc.Images), ',')
 
 	if len(namespaces) == 0 && len(images) == 0 {
 		log.Printf("[WARN] no namespaces or images specified, use `--organisations` or `--images` flags," +
@@ -96,7 +71,7 @@ func (sc *ServerCommand) Execute(unparsedArgs []string) error {
 </html>`))
 	})
 
-	err = http.ListenAndServe(sc.Port, nil)
+	err := http.ListenAndServe(sc.Port, nil)
 	return err
 }
 

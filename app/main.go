@@ -8,6 +8,7 @@ import (
 	"docker-hub-exporter/cmd"
 	"github.com/jessevdk/go-flags"
 	"os"
+	"strings"
 
 	log "github.com/go-pkgz/lgr"
 )
@@ -15,8 +16,6 @@ import (
 // Opts with all cli commands and flags
 type Opts struct {
 	ServerCmd cmd.ServerCommand `command:"server"`
-
-	Dbg bool `long:"dbg" env:"DEBUG" description:"debug mode"`
 }
 
 func main() {
@@ -24,7 +23,7 @@ func main() {
 	var opts Opts
 	p := flags.NewParser(&opts, flags.HelpFlag|flags.PassDoubleDash|flags.IgnoreUnknown)
 	p.CommandHandler = func(command flags.Commander, args []string) error {
-		setupLog(opts.Dbg)
+		setupLog(true)
 		c := command.(flags.Commander)
 
 		err := c.Execute(args)
@@ -34,7 +33,7 @@ func main() {
 		return err
 	}
 
-	if _, err := p.Parse(); err != nil {
+	if _, err := p.ParseArgs(addServerCommandToArgs(addExtraDashForLegacyOptions(os.Args[1:]))); err != nil {
 		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
 			os.Exit(0)
 		} else {
@@ -50,4 +49,23 @@ func setupLog(dbg bool) {
 		return
 	}
 	log.Setup(log.Msec, log.LevelBraces)
+}
+
+func addServerCommandToArgs(args []string) []string {
+	return append([]string{"server"}, args...)
+}
+
+func addExtraDashForLegacyOptions(args []string) []string {
+
+	dashedArgs := make([]string, len(args))
+	for i, arg := range args {
+		if strings.HasPrefix(arg, "--") {
+			dashedArgs[i] = arg
+		} else if strings.HasPrefix(arg, "-") {
+			dashedArgs[i] = "-" + arg
+		} else {
+			dashedArgs[i] = arg
+		}
+	}
+	return dashedArgs
 }

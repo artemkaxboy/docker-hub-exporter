@@ -25,22 +25,22 @@ var (
 	dockerHubImageLastUpdated = prometheus.NewDesc(
 		prometheus.BuildFQName(Namespace, "", "last_updated"),
 		"docker_hub_exporter: Docker Images Last Updated",
-		[]string{"image", "namespace"}, nil,
+		[]string{"image", "user"}, nil,
 	)
 	dockerHubImagePullsTotal = prometheus.NewDesc(
 		prometheus.BuildFQName(Namespace, "", "pulls_total"),
 		"docker_hub_exporter: Docker Images Pulls Total.",
-		[]string{"image", "namespace"}, nil,
+		[]string{"image", "user"}, nil,
 	)
 	dockerHubImageStars = prometheus.NewDesc(
 		prometheus.BuildFQName(Namespace, "", "stars"),
 		"docker_hub_exporter: Docker Images Stars.",
-		[]string{"image", "namespace"}, nil,
+		[]string{"image", "user"}, nil,
 	)
 	dockerHubImageIsAutomated = prometheus.NewDesc(
 		prometheus.BuildFQName(Namespace, "", "is_automated"),
 		"docker_hub_exporter: Docker Images Is Automated.",
-		[]string{"image", "namespace"}, nil,
+		[]string{"image", "user"}, nil,
 	)
 )
 
