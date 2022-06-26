@@ -22,7 +22,7 @@ type Opts struct {
 func main() {
 
 	var opts Opts
-	p := flags.NewParser(&opts, flags.HelpFlag|flags.PassDoubleDash)
+	p := flags.NewParser(&opts, flags.HelpFlag|flags.PassDoubleDash|flags.IgnoreUnknown)
 	p.CommandHandler = func(command flags.Commander, args []string) error {
 		setupLog(opts.Dbg)
 		c := command.(flags.Commander)

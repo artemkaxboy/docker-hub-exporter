@@ -7,40 +7,69 @@ package cmd
 import (
 	exporter "docker-hub-exporter/exporter"
 	log "github.com/go-pkgz/lgr"
+	"github.com/jessevdk/go-flags"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
+	"strings"
 	"time"
+	"unicode"
 )
-
-const httpPort = "9170"
 
 // ServerCommand set of flags and command for server to start
 type ServerCommand struct {
-	MetricsPath string   `long:"metrics-path" env:"METRICS_PATH" required:"false" default:"/metrics" description:"Metrics path"`
-	Namespaces  []string `long:"namespace" env:"NAMESPACES" required:"false" description:"(list) Namespaces to expose metrics for" env-delim:","`
-	Images      []string `long:"image" env:"IMAGES" required:"false" description:"(list) Images to expose metrics for" env-delim:","`
-	Timeout     int      `long:"timeout" env:"TIMEOUT" required:"false" default:"5" description:"Docker Hub connection timeout in seconds"`
+	MetricsPath string `long:"telemetry-path" required:"false" default:"/metrics" description:"Metrics path"`
+	Namespaces  string `long:"organisations" env:"ORGS" required:"false" description:"Namespaces to expose metrics for"`
+	Images      string `long:"images" env:"IMAGES" required:"false" description:"(list) Images to expose metrics for" env-delim:","`
+	Timeout     int    `long:"connection-timeout" env:"CONNECTION_TIMEOUT" required:"false" default:"5" description:"Docker Hub connection timeout in seconds"`
 
-	//Retries     int      `long:"retries" env:"RETRIES" required:"false" default:"3" description:"Retries until failure is raised."`
+	Port    string `long:"listen-address" env:"BIND_PORT" required:"false" default:":9170" description:"Listen address and port"`
+	Retries int    `long:"connection-retries" env:"CONNECTION_TIMEOUT" required:"false" default:"3" description:"Connection retries until failure is raised"`
+}
+
+type LegacyOptions struct {
+	Organisations string `long:"organisations" required:"false"`
+	Images        string `long:"images" required:"false"`
 }
 
 // Execute starts server with ServerCommand parameters, entry point for "server" command
-func (sc *ServerCommand) Execute(_ []string) error {
+func (sc *ServerCommand) Execute(unparsedArgs []string) error {
 
 	log.Printf("[INFO] start `server`")
 	log.Printf("[DEBUG] options: %+v", sc)
 
-	if len(sc.Namespaces) == 0 && len(sc.Images) == 0 {
-		log.Printf("[WARN] no namespaces or images specified, use `--namespace` or `--image` flags, or set " +
-			"`NAMESPACES` or `IMAGES` env variables")
+	newNamespaces := noEmptySplit(removeSpaces(sc.Namespaces), ',')
+	newImages := noEmptySplit(removeSpaces(sc.Images), ',')
+
+	dashedArgs := make([]string, len(unparsedArgs))
+	for i, attr := range unparsedArgs {
+		if strings.HasPrefix(attr, "-") {
+			dashedArgs[i] = "-" + attr
+		} else {
+			dashedArgs[i] = attr
+		}
+	}
+
+	var legacy LegacyOptions
+	p := flags.NewParser(&legacy, flags.None)
+	_, err := p.ParseArgs(append([]string{""}, dashedArgs...))
+	if err != nil {
+		return err
+	}
+
+	namespaces := append(newNamespaces, noEmptySplit(removeSpaces(legacy.Organisations), ',')...)
+	images := append(newImages, noEmptySplit(removeSpaces(legacy.Images), ',')...)
+
+	if len(namespaces) == 0 && len(images) == 0 {
+		log.Printf("[WARN] no namespaces or images specified, use `--organisations` or `--images` flags," +
+			" or set `ORGS` or `IMAGES` env variables")
 		return nil
 	}
 
 	e := exporter.New(
-		sc.Namespaces,
-		sc.Images,
-		sc.Timeout,
+		namespaces,
+		images,
+		sc.Retries,
 		exporter.WithLogger(log.ToStdLogger(log.Default(), "DEBUG")),
 		exporter.WithTimeout(time.Second*time.Duration(sc.Timeout)),
 	)
@@ -67,6 +96,24 @@ func (sc *ServerCommand) Execute(_ []string) error {
 </html>`))
 	})
 
-	err := http.ListenAndServe(":"+httpPort, nil)
+	err = http.ListenAndServe(sc.Port, nil)
 	return err
+}
+
+func removeSpaces(str string) string {
+	var b strings.Builder
+	b.Grow(len(str))
+	for _, ch := range str {
+		if !unicode.IsSpace(ch) {
+			b.WriteRune(ch)
+		}
+	}
+	return b.String()
+}
+
+func noEmptySplit(str string, sep rune) []string {
+	f := func(c rune) bool {
+		return c == sep
+	}
+	return strings.FieldsFunc(str, f)
 }
