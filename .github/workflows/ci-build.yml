@@ -70,22 +70,23 @@ jobs:
           version=${GITHUB_REF#refs/tags/v}
           major=$(echo $version | cut -d. -f1)
           minor=$(echo $version | cut -d. -f2)
-          echo $version
-          echo $major.$minor
-          echo $major
-#          now=$(date --rfc-3339=seconds --utc)
-#          IMAGE_NAME="$(echo ${GITHUB_REPOSITORY} | cut -d'/' -f2)"
-#          echo "REVISION=${GITHUB_SHA}, VERSION=${version}, REF_NAME=${GITHUB_REF}, CREATED=${now}"
-#
-#          echo ${GH_REGISTRY_TOKEN} | docker login ghcr.io -u ${GH_REGISTRY_USERNAME} --password-stdin
-#          echo ${DOCKER_REGISTRY_TOKEN} | docker login -u ${DOCKER_REGISTRY_USERNAME} --password-stdin
-#
-#          docker buildx build --push \
-#              --build-arg REVISION=${GITHUB_SHA} --build-arg VERSION=${version} \
-#              --build-arg REF_NAME=${GITHUB_REF} --build-arg CREATED="${now}" \
-#              --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8 \
-#              -t ghcr.io/${GH_REGISTRY_USERNAME}/${IMAGE_NAME}:${version} \
-#              -t ghcr.io/${GH_REGISTRY_USERNAME}/${IMAGE_NAME}:latest \
-#              -t ${DOCKER_REGISTRY_USERNAME}/${IMAGE_NAME}:${version} \
-#              -t ${DOCKER_REGISTRY_USERNAME}/${IMAGE_NAME}:latest \
-#              .
+          now=$(date --rfc-3339=seconds --utc)
+          IMAGE_NAME="$(echo ${GITHUB_REPOSITORY} | cut -d'/' -f2)"
+          echo "REVISION=${GITHUB_SHA}, VERSION=${version}, REF_NAME=${GITHUB_REF}, CREATED=${now}"
+
+          echo ${GH_REGISTRY_TOKEN} | docker login ghcr.io -u ${GH_REGISTRY_USERNAME} --password-stdin
+          echo ${DOCKER_REGISTRY_TOKEN} | docker login -u ${DOCKER_REGISTRY_USERNAME} --password-stdin
+
+          docker buildx build --push \
+              --build-arg REVISION=${GITHUB_SHA} --build-arg VERSION=${version} \
+              --build-arg REF_NAME=${GITHUB_REF} --build-arg CREATED="${now}" \
+              --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8 \
+              -t ghcr.io/${GH_REGISTRY_USERNAME}/${IMAGE_NAME}:${major} \
+              -t ghcr.io/${GH_REGISTRY_USERNAME}/${IMAGE_NAME}:${major}.${minor} \
+              -t ghcr.io/${GH_REGISTRY_USERNAME}/${IMAGE_NAME}:${version} \
+              -t ghcr.io/${GH_REGISTRY_USERNAME}/${IMAGE_NAME}:latest \
+              -t ${DOCKER_REGISTRY_USERNAME}/${IMAGE_NAME}:${major} \
+              -t ${DOCKER_REGISTRY_USERNAME}/${IMAGE_NAME}:${major}.${minor} \
+              -t ${DOCKER_REGISTRY_USERNAME}/${IMAGE_NAME}:${version} \
+              -t ${DOCKER_REGISTRY_USERNAME}/${IMAGE_NAME}:latest \
+              .
