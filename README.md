@@ -5,7 +5,7 @@ It's a legacy version of code fully compatible with [infinityworks/docker-hub-ex
 ## HOW TO MIGRATE
 
 * Stop and remove old container
-* Change `infinityworks/docker-hub-exporter` to `artemkaxboy/docker-hub-exporter` in your run command
+* Change `infinityworks/docker-hub-exporter` to `artemkaxboy/docker-hub-exporter:legacy` in your original run command
 
 # Prometheus Docker Hub Exporter
 
