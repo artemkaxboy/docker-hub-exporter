@@ -52,6 +52,5 @@ WORKDIR /srv
 USER $APP_USER:$APP_USER
 
 EXPOSE 9170
-HEALTHCHECK --interval=30s --timeout=3s CMD curl --fail http://localhost:9170/ping || exit 1
 
-ENTRYPOINT ["/srv/docker-hub-exporter", "server"]
+ENTRYPOINT ["/srv/docker-hub-exporter"]
