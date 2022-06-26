@@ -41,7 +41,7 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_REF: ${{ github.ref }}
         run: |
-          version=$(echo ${GITHUB_REF} | cut -d'/' -f3)
+          version="$(echo ${GITHUB_REF} | cut -d'/' -f3)"
           now=$(date --rfc-3339=seconds --utc)
           IMAGE_NAME="$(echo ${GITHUB_REPOSITORY} | cut -d'/' -f2)"
           echo "REVISION=${GITHUB_SHA}, VERSION=${version}, REF_NAME=${GITHUB_REF}, CREATED=${now}"
